@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brutalist URL Shortener</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['Roboto Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes glitch {
+            0% {
+                clip-path: inset(40% 0 61% 0);
+            }
+            20% {
+                clip-path: inset(92% 0 1% 0);
+            }
+            40% {
+                clip-path: inset(43% 0 1% 0);
+            }
+            60% {
+                clip-path: inset(25% 0 58% 0);
+            }
+            80% {
+                clip-path: inset(54% 0 7% 0);
+            }
+            100% {
+                clip-path: inset(58% 0 43% 0);
+            }
+        }
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 #000;
+            animation: glitch 0.3s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 #000;
+            animation: glitch 0.3s infinite linear alternate;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .toast-success {
+            background-color: #4ecdc4;
+        }
+        .toast-error {
+            background-color: #ff6b6b;
+        }
+    </style>
+</head>
+<body class="bg-white text-black font-mono min-h-screen flex items-center justify-center p-4">
+    <div id="toast" class="toast"></div>
+    <div class="w-full max-w-4xl">
+        <div class="relative border-8 border-black p-8 overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-black"></div>
+            <div class="absolute bottom-0 right-0 w-full h-2 bg-black"></div>
+            <div class="absolute top-0 left-0 w-2 h-full bg-black"></div>
+            <div class="absolute bottom-0 right-0 w-2 h-full bg-black"></div>
+            
+            <h1 class="text-6xl font-bold mb-12 text-center uppercase relative glitch" data-text="URL SHORTENER">URL SHORTENER</h1>
+            
+            <form id="url-form" class="space-y-8">
+                <div class="relative">
+                    <input id="url-input" type="url" placeholder="Enter your URL here" required
+                           class="w-full p-4 text-2xl bg-transparent border-4 border-black focus:outline-none focus:border-gray-700 transition-colors placeholder-black placeholder-opacity-50">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <span class="text-4xl animate-pulse">|</span>
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full bg-black text-white p-4 text-2xl font-bold uppercase transition-transform hover:scale-105 relative overflow-hidden group">
+                    <span class="relative z-10">SHORTEN</span>
+                    <span class="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                    <span class="absolute inset-0 bg-black transform translate-y-full group-hover:translate-y-0 transition-transform"></span>
+                </button>
+            </form>
+            
+            <div id="result" class="mt-12 space-y-4"></div>
+            <div id="qr-code" class="mt-12 flex justify-center"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('url-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const url = document.getElementById('url-input').value;
+            const resultDiv = document.getElementById('result');
+            const qrCodeDiv = document.getElementById('qr-code');
+            
+            resultDiv.innerHTML = '<p class="text-center text-3xl font-bold animate-pulse">PROCESSING<span class="dots">...</span></p>';
+            qrCodeDiv.innerHTML = '';
+            
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `url=${encodeURIComponent(url)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                resultDiv.innerHTML = `
+                    <p class="font-bold mb-4 text-2xl uppercase">Shortened URL:</p>
+                    <a href="${data.short_url}" target="_blank" 
+                       class="block p-4 bg-black text-white text-xl hover:bg-white hover:text-black border-4 border-black transition-all relative overflow-hidden group">
+                        <span class="relative z-10">${data.short_url}</span>
+                        <span class="absolute inset-0 bg-white transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom"></span>
+                    </a>
+                `;
+                qrCodeDiv.innerHTML = `
+                    <div class="bg-white p-4 border-4 border-black hover:scale-105 transition-transform">
+                        <img src="data:image/png;base64,${data.qr_code}" alt="QR Code" class="w-64 h-64">
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<p class="text-red-600 font-bold text-2xl">An error occurred: ${error.message}</p>`;
+            });
+        });
+
+        // Animate loading dots
+        setInterval(() => {
+            const dots = document.querySelector('.dots');
+            if (dots) {
+                dots.textContent = dots.textContent.length >= 3 ? '' : dots.textContent + '.';
+            }
+        }, 500);
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+

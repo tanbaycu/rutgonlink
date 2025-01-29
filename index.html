@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TanBayCu - URL Shortener & QR Code Generator</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Free online tool to shorten URLs and generate QR codes. Simple, fast, and reliable URL shortener with custom QR code generation capabilities." />
+    <meta name="keywords" content="url shortener, qr code generator, link shortener, short url, qr code" />
+    <meta name="author" content="TanBayCu" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tanbaycu-rutgonlink.vercel.app" />
+    <meta property="og:title" content="TanBayCu - URL Shortener & QR Code Generator" />
+    <meta property="og:description" content="Free online tool to shorten URLs and generate QR codes. Simple, fast, and reliable." />
+    <meta property="og:image" content="https://i.postimg.cc/W3N38R5W/Thi-t-k-ch-a-c-t-n-16.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://tanbaycu-rutgonlink.vercel.app" />
+    <meta property="twitter:title" content="TanBayCu - URL Shortener & QR Code Generator" />
+    <meta property="twitter:description" content="Free online tool to shorten URLs and generate QR codes. Simple, fast, and reliable." />
+    <meta property="twitter:image" content="https://i.postimg.cc/W3N38R5W/Thi-t-k-ch-a-c-t-n-16.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/W3N38R5W/Thi-t-k-ch-a-c-t-n-16.png" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      .sticky-nav {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      .nav-link {
+        position: relative;
+      }
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        bottom: -4px;
+        left: 0;
+        background-color: #ff6b6b;
+        transform: scaleX(0);
+        transition: transform 0.3s ease-in-out;
+      }
+      .nav-link:hover::after,
+      .nav-link.active::after {
+        transform: scaleX(1);
+      }
+      @media (max-width: 768px) {
+        .mobile-menu {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.5s ease-out;
+        }
+        .mobile-menu.open {
+          max-height: 300px;
+        }
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        z-index: 1000;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      .toast-success {
+        background-color: #4ecdc4;
+      }
+      .toast-error {
+        background-color: #ff6b6b;
+      }
+      /* Loading Animation Styles */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .dark .loading-overlay {
+        background-color: rgba(0, 0, 0, 0.9);
+      }
+
+      .loading-text {
+        font-size: 2rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+      }
+
+      .loading-dots::after {
+        content: '...';
+        animation: loading-dots 1.5s steps(4, end) infinite;
+      }
+
+      @keyframes loading-dots {
+        0%, 20% { content: ''; }
+        40% { content: '.'; }
+        60% { content: '..'; }
+        80%, 100% { content: '...'; }
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              brutalist: ["Space Mono", "monospace"]
+            },
+            colors: {
+              "brutal-black": "#0a0a0a",
+              "brutal-white": "#ffffff",
+              "brutal-accent": "#ff6b6b",
+              "brutal-secondary": "#4ecdc4"
+            }
+          }
+        }
+      };
+    </script>
+    <!-- JSON-LD for SEO -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "TanBayCu URL Shortener",
+        "url": "https://tanbaycu-rutgonlink.vercel.app",
+        "description": "Free online tool to shorten URLs and generate QR codes",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+  </head>
+  <body
+    class="bg-brutal-white dark:bg-brutal-black text-brutal-black dark:text-brutal-white font-brutalist min-h-screen flex flex-col transition-colors duration-300"
+  >
+    <nav
+      class="sticky-nav bg-brutal-white dark:bg-brutal-black border-b-4 border-brutal-black dark:border-brutal-white"
+    >
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold flex items-center">
+                <img src="https://i.postimg.cc/W3N38R5W/Thi-t-k-ch-a-c-t-n-16.png" alt="TanBayCu Logo" class="h-8 w-8 mr-2" />
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600">
+                    tanbaycu
+                </span>
+                <span class="ml-2">Tools</span>
+            </a>
+          <div class="hidden md:flex items-center space-x-4">
+            <a
+              href="#url-shortener"
+              class="nav-link p-2 transition-colors duration-300"
+            >
+              <i data-lucide="scissors" class="inline mr-1"></i>
+              Shorten URL
+            </a>
+            <a
+              href="#qr-generator"
+              class="nav-link p-2 transition-colors duration-300"
+            >
+              <i data-lucide="qr-code" class="inline mr-1"></i>
+              QR Generator
+            </a>
+            <button
+              id="theme-toggle"
+              class="p-2 border-2 border-brutal-black dark:border-brutal-white rounded hover:bg-brutal-accent hover:text-brutal-white transition-colors duration-300"
+            >
+              <i data-lucide="sun" class="hidden dark:block"></i>
+              <i data-lucide="moon" class="block dark:hidden"></i>
+            </button>
+          </div>
+          <button id="mobile-menu-button" class="md:hidden">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+        <div id="mobile-menu" class="mobile-menu md:hidden mt-4">
+          <a
+            href="#url-shortener"
+            class="block py-2 px-4 hover:bg-brutal-accent hover:text-brutal-white transition-colors duration-300"
+          >
+            <i data-lucide="scissors" class="inline mr-1"></i>
+            Shorten URL
+          </a>
+          <a
+            href="#qr-generator"
+            class="block py-2 px-4 hover:bg-brutal-accent hover:text-brutal-white transition-colors duration-300"
+          >
+            <i data-lucide="qr-code" class="inline mr-1"></i>
+            QR Generator
+          </a>
+          <button
+            id="mobile-theme-toggle"
+            class="w-full text-left py-2 px-4 hover:bg-brutal-accent hover:text-brutal-white transition-colors duration-300"
+          >
+            <i data-lucide="sun" class="inline mr-1 hidden dark:inline"></i>
+            <i data-lucide="moon" class="inline mr-1 dark:hidden"></i>
+            Toggle Theme
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <div id="toast" class="toast"></div>
+      <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-text">
+          Loading<span class="loading-dots"></span>
+        </div>
+      </div>
+      <div id="url-shortener" class="mb-16">
+        <h2
+          class="text-3xl sm:text-4xl font-bold mb-8 text-center uppercase bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black py-2 shadow-[4px_4px_0_0_#ff6b6b]"
+        >
+          URL Shortener
+        </h2>
+        <form id="url-form" class="space-y-6 max-w-md mx-auto">
+          <div>
+            <label
+              for="url-input"
+              class="block text-lg font-bold mb-2 uppercase"
+              >Enter URL</label
+            >
+            <div class="relative">
+              <input
+                id="url-input"
+                type="url"
+                placeholder="https://example.com"
+                required
+                class="w-full p-4 pr-10 border-2 border-brutal-black dark:border-brutal-white bg-transparent text-lg focus:outline-none focus:border-brutal-accent transition-colors rounded-md shadow-[4px_4px_0_0_#0a0a0a] dark:shadow-[4px_4px_0_0_#ffffff]"
+              />
+              <i
+                data-lucide="link"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-brutal-black dark:text-brutal-white"
+              ></i>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black p-4 text-lg font-bold uppercase transition-all hover:bg-brutal-accent hover:text-brutal-white dark:hover:text-brutal-black rounded-md relative overflow-hidden group flex items-center justify-center"
+          >
+            <i data-lucide="scissors" class="mr-2"></i>
+            <span class="relative z-10">Shorten</span>
+            <span
+              class="absolute inset-0 bg-brutal-accent transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
+            ></span>
+          </button>
+        </form>
+        <div id="result" class="mt-8 space-y-4 max-w-md mx-auto"></div>
+        <div id="qr-code" class="mt-8 flex justify-center"></div>
+      </div>
+
+      <div id="qr-generator" class="mb-16 hidden">
+        <h2
+          class="text-3xl sm:text-4xl font-bold mb-8 text-center uppercase bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black py-2 shadow-[4px_4px_0_0_#ff6b6b]"
+        >
+          QR Generator
+        </h2>
+        <form id="qr-form" class="space-y-6 max-w-md mx-auto">
+          <div>
+            <label
+              for="qr-content"
+              class="block text-lg font-bold mb-2 uppercase"
+              >QR Content</label
+            >
+            <div class="relative">
+              <textarea
+                id="qr-content"
+                placeholder="Enter text or URL for QR code"
+                required
+                class="w-full p-4 pr-10 border-2 border-brutal-black dark:border-brutal-white bg-transparent text-lg focus:outline-none focus:border-brutal-accent transition-colors rounded-md shadow-[4px_4px_0_0_#0a0a0a] dark:shadow-[4px_4px_0_0_#ffffff]"
+                rows="4"
+              ></textarea>
+              <i
+                data-lucide="type"
+                class="absolute right-3 top-3 text-brutal-black dark:text-brutal-white"
+              ></i>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[150px]">
+              <label
+                for="qr-color"
+                class="block text-lg font-bold mb-2 uppercase"
+                >QR Color</label
+              >
+              <div class="relative">
+                <input
+                  type="color"
+                  id="qr-color"
+                  value="#000000"
+                  class="w-full h-12 rounded-md cursor-pointer"
+                />
+                <i
+                  data-lucide="palette"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-brutal-black dark:text-brutal-white pointer-events-none"
+                ></i>
+              </div>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label
+                for="qr-size"
+                class="block text-lg font-bold mb-2 uppercase"
+                >QR Size</label
+              >
+              <div class="relative">
+                <input
+                  type="range"
+                  id="qr-size"
+                  min="100"
+                  max="500"
+                  step="50"
+                  value="250"
+                  class="w-full"
+                />
+                <span id="qr-size-value" class="absolute right-0 top-0 text-sm"
+                  >250px</span
+                >
+              </div>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black p-4 text-lg font-bold uppercase transition-all hover:bg-brutal-accent hover:text-brutal-white dark:hover:text-brutal-black rounded-md relative overflow-hidden group flex items-center justify-center"
+          >
+            <i data-lucide="qr-code" class="mr-2"></i>
+            <span class="relative z-10">Generate QR</span>
+            <span
+              class="absolute inset-0 bg-brutal-accent transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
+            ></span>
+          </button>
+        </form>
+        <div id="dynamic-qr-code" class="mt-8 flex flex-col items-center"></div>
+      </div>
+    </main>
+
+    <footer class="bg-brutal-white dark:bg-brutal-black border-t-4 border-brutal-black dark:border-brutal-white p-6 text-center">
+        <div class="container mx-auto">
+          <p class="text-lg font-bold">
+            &copy; 2025 <span class="text-brutal-accent">tanbaycu</span> Tools
+          </p>
+          <p class="mt-2 text-sm">
+            Simplifying your online experience, one link at a time.
+          </p>
+          <div class="mt-4 flex justify-center space-x-4">
+            <a href="https://facebook.com/tanbaycu.kaiser" class="text-brutal-black dark:text-brutal-white hover:text-brutal-accent transition-colors duration-300">
+              <i data-lucide="facebook" class="w-6 h-6"></i>
+              <span class="sr-only">Facebook</span>
+            </a>
+            <a href="https:/github.com/tanbaycu" class="text-brutal-black dark:text-brutal-white hover:text-brutal-accent transition-colors duration-300">
+              <i data-lucide="github" class="w-6 h-6"></i>
+              <span class="sr-only">Github</span>
+            </a>
+            <a href="http://instagram.com/tanbaycu" class="text-brutal-black dark:text-brutal-white hover:text-brutal-accent transition-colors duration-300">
+              <i data-lucide="instagram" class="w-6 h-6"></i>
+              <span class="sr-only">Instagram</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+      
+      
+
+    <script>
+      // Initialize Lucide icons
+      lucide.createIcons();
+
+      // Mobile menu toggle
+      const mobileMenuButton = document.getElementById("mobile-menu-button");
+      const mobileMenu = document.getElementById("mobile-menu");
+      mobileMenuButton.addEventListener("click", () => {
+        mobileMenu.classList.toggle("open");
+      });
+
+      // Theme toggle
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+      }
+      document
+        .getElementById("theme-toggle")
+        .addEventListener("click", toggleTheme);
+      document
+        .getElementById("mobile-theme-toggle")
+        .addEventListener("click", toggleTheme);
+
+      // QR size slider
+      const qrSizeSlider = document.getElementById("qr-size");
+      const qrSizeValue = document.getElementById("qr-size-value");
+      qrSizeSlider.addEventListener("input", (e) => {
+        qrSizeValue.textContent = `${e.target.value}px`;
+      });
+
+      // Navigation
+      const urlShortener = document.getElementById("url-shortener");
+      const qrGenerator = document.getElementById("qr-generator");
+      const navLinks = document.querySelectorAll('a[href^="#"]');
+
+      function setActiveNavLink(hash) {
+        navLinks.forEach((link) => {
+          if (link.getAttribute("href") === hash) {
+            link.classList.add("active");
+          } else {
+            link.classList.remove("active");
+          }
+        });
+      }
+
+      function showSection(hash) {
+        if (hash === "#url-shortener") {
+          urlShortener.classList.remove("hidden");
+          qrGenerator.classList.add("hidden");
+        } else if (hash === "#qr-generator") {
+          urlShortener.classList.add("hidden");
+          qrGenerator.classList.remove("hidden");
+        }
+        setActiveNavLink(hash);
+      }
+
+      navLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const hash = e.target.closest("a").getAttribute("href");
+          history.pushState(null, "", hash);
+          showSection(hash);
+          mobileMenu.classList.remove("open");
+        });
+      });
+
+      window.addEventListener("popstate", () => {
+        showSection(window.location.hash || "#url-shortener");
+      });
+
+      // Initial section display
+      showSection(window.location.hash || "#url-shortener");
+
+      // URL Shortener
+      document
+        .getElementById("url-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const url = document.getElementById("url-input").value;
+          const resultDiv = document.getElementById("result");
+          const qrCodeDiv = document.getElementById("qr-code");
+
+          if (!url) {
+            showToast("Please enter a URL", "error");
+            return;
+          }
+
+          showLoading();
+          resultDiv.innerHTML = "";
+          qrCodeDiv.innerHTML = "";
+
+          fetch("/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `url=${encodeURIComponent(url)}`
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              resultDiv.innerHTML = `
+            <p class="font-bold mb-2 text-lg uppercase">Shortened URL:</p>
+            <a href="${data.short_url}" target="_blank" 
+               class="block p-4 bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black hover:bg-brutal-accent hover:text-brutal-white dark:hover:text-brutal-black transition-all rounded-md shadow-[4px_4px_0_0_#ff6b6b] hover:shadow-[6px_6px_0_0_#ff6b6b] relative overflow-hidden group">
+                <span class="relative z-10 flex items-center">
+                    <i data-lucide="link" class="mr-2"></i>
+                    ${data.short_url}
+                </span>
+                <span class="absolute inset-0 bg-brutal-accent transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+            </a>
+            <p class="mt-2 text-sm">Original URL: ${data.original_url}</p>
+            <p class="text-sm">Processing time: ${data.processing_time}</p>
+        `;
+              if (data.qr_code) {
+                qrCodeDiv.innerHTML = `
+                <div class="bg-brutal-white dark:bg-brutal-black p-4 rounded-lg shadow-[8px_8px_0_0_#0a0a0a] dark:shadow-[8px_8px_0_0_#ffffff] hover:shadow-[12px_12px_0_0_#0a0a0a] dark:hover:shadow-[12px_12px_0_0_#ffffff] transition-all">
+                    <img src="data:image/png;base64,${data.qr_code}" alt="QR Code" class="w-48 h-48">
+                </div>
+            `;
+              }
+              lucide.createIcons();
+              showToast("URL shortened successfully!", "success");
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              resultDiv.innerHTML = `<p class="text-brutal-accent font-bold text-lg flex items-center"><i data-lucide="alert-triangle" class="mr-2"></i>${error.message}</p>`;
+              lucide.createIcons();
+              showToast("Failed to shorten URL. Please try again.", "error");
+            })
+            .finally(() => {
+              hideLoading();
+            });
+        });
+
+      document
+        .getElementById("qr-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const content = document.getElementById("qr-content").value;
+          const color = document.getElementById("qr-color").value;
+          const size = document.getElementById("qr-size").value;
+          const qrCodeDiv = document.getElementById("dynamic-qr-code");
+
+          if (!content) {
+            showToast("Please enter content for the QR code", "error");
+            return;
+          }
+
+          showLoading();
+          qrCodeDiv.innerHTML = "";
+
+          fetch("/generate-qr", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ content, color, size })
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              qrCodeDiv.innerHTML = `
+                <div class="bg-brutal-white dark:bg-brutal-black p-4 rounded-lg shadow-[8px_8px_0_0_#0a0a0a] dark:shadow-[8px_8px_0_0_#ffffff] hover:shadow-[12px_12px_0_0_#0a0a0a] dark:hover:shadow-[12px_12px_0_0_#ffffff] transition-all">
+                    <img src="data:image/png;base64,${data.qr_code}" alt="Dynamic QR Code" class="w-full h-auto max-w-[${data.size}px]">
+                </div>
+                <a href="data:image/png;base64,${data.qr_code}" download="qr-code.png" class="mt-4 inline-block bg-brutal-black dark:bg-brutal-white text-brutal-white dark:text-brutal-black p-2 rounded-md text-sm font-medium transition-colors hover:bg-brutal-accent hover:text-brutal-white flex items-center justify-center">
+                    <i data-lucide="download" class="mr-2"></i>
+                    Download QR Code
+                </a>
+                <p class="mt-2 text-sm">Content: ${data.content}</p>
+                <p class="text-sm">Color: ${data.color}</p>
+                <p class="text-sm">Size: ${data.size}px</p>
+            `;
+              lucide.createIcons();
+              showToast("QR code generated successfully!", "success");
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              qrCodeDiv.innerHTML = `<p class="text-brutal-accent font-bold text-lg flex items-center"><i data-lucide="alert-triangle" class="mr-2"></i>An error occurred: ${error.message}</p>`;
+              lucide.createIcons();
+              showToast(
+                "Failed to generate QR code. Please try again.",
+                "error"
+              );
+            })
+            .finally(() => {
+              hideLoading();
+            });
+        });
+
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = `toast ${
+          type === "success" ? "toast-success" : "toast-error"
+        }`;
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      function showLoading() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+      }
+
+      function hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
+    </script>
+  </body>
+</html>
